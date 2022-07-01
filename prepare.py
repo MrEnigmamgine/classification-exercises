@@ -6,7 +6,7 @@ import pandas as pd
 def prep_iris(df):
     df = df.drop(columns=['species_id','measurement_id'])
     df = df.rename(columns={'species_name' : 'species'})
-    dummy = pd.get_dummies(df.species, drop_first= True)
+    dummy = pd.get_dummies(df.species, drop_first= False)
     df = pd.concat([df, dummy], axis= 1)
     return df
 
@@ -18,7 +18,7 @@ def prep_titanic(df):
     cols_to_drop = ['deck', 'embarked', 'class', 'age']
     df = df.drop(columns=cols_to_drop)
     df['embark_town'] = df.embark_town.fillna(value='Southampton')
-    dummy_df = pd.get_dummies(df[['sex', 'embark_town']], dummy_na=False, drop_first=[True, True])
+    dummy_df = pd.get_dummies(df[['sex', 'embark_town']], dummy_na=False, drop_first=True)
     df = pd.concat([df, dummy_df], axis=1)
     return df
 
