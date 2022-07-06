@@ -1,122 +1,131 @@
 import pandas as pd
+import numpy as np
+import os
+from env import host, user, password
 
-def get_db_url(database, username='', password='', hostname='', env=''):
-    if env != '':
-        d = {}
-        file = open(env)
-        for line in file:
-            (key, value) = line.split('=')
-            d[key] = value.replace('\n', '').replace("'",'').replace('"','')
-        username = d['username']
-        hostname = d['hostname']
-        password = d['password']
-    url = f'mysql+pymysql://{username}:{password}@{hostname}/{database}'
-    return url
+###################### Acquire Titanic Data ######################
 
-def read_google(url):
-    csv_export_url = url.replace('/edit#gid=', '/export?format=csv&gid=')
-    return pd.read_csv(csv_export_url)
-
+def get_connection(db, user=user, host=host, password=password):
+    '''
+    This function uses my info from my env file to
+    create a connection url to access the Codeup db.
+    It takes in a string name of a database as an argument.
+    '''
+    return f'mysql+pymysql://{user}:{password}@{host}/{db}'
+    
+    
+    
 def new_titanic_data():
-    query = 'SELECT * FROM titanic_db.passengers'
-    url = get_db_url('titanic_db',env='./env.py')
-    df = pd.read_sql(query, url)
+    '''
+    This function reads the titanic data from the Codeup db into a df,
+    write it to a csv file, and returns the df.
+    '''
+    # Create SQL query.
+    sql_query = 'SELECT * FROM passengers'
+    
+    # Read in DataFrame from Codeup db.
+    df = pd.read_sql(sql_query, get_connection('titanic_db'))
+    
     return df
 
-import os
+
 
 def get_titanic_data():
-    filename = "titanic.csv"
-    
-    # if file is available locally, read it
-    if os.path.isfile(filename):
-        return pd.read_csv(filename, index_col=0)
-    
-    # if file not available locally, acquire data from SQL database
-    # and write it as csv locally for future use
+    '''
+    This function reads in titanic data from Codeup database, writes data to
+    a csv file if a local file does not exist, and returns a df.
+    '''
+    if os.path.isfile('titanic_df.csv'):
+        
+        # If csv file exists, read in data from csv file.
+        df = pd.read_csv('titanic_df.csv', index_col=0)
+        
     else:
-        # read the SQL query into a dataframe
+        
+        # Read fresh data from db into a DataFrame.
         df = new_titanic_data()
         
-        # Write that dataframe to disk for later. Called "caching" the data for later.
-        df.to_csv(filename)
+        # Write DataFrame to a csv file.
+        df.to_csv('titanic_df.csv')
+        
+    return df
 
-        # Return the dataframe to the calling code
-        return df  
-
+###################### Acquire Iris Data ######################
 
 def new_iris_data():
-    query = """
-        SELECT 
-            *
-        FROM
-            iris_db.measurements
-        JOIN
-            iris_db.species using(species_id)
-        ;
-        """
-
-    url = get_db_url('iris_db',env='./env.py')
-    df = pd.read_sql(query, url)
+    '''
+    This function reads the iris data from the Codeup db into a df.
+    '''
+    sql_query = """
+                SELECT 
+                    species_id,
+                    species_name,
+                    sepal_length,
+                    sepal_width,
+                    petal_length,
+                    petal_width
+                FROM measurements
+                JOIN species USING(species_id)
+                """
+    
+    # Read in DataFrame from Codeup db.
+    df = pd.read_sql(sql_query, get_connection('iris_db'))
+    
     return df
 
-import os
 
 def get_iris_data():
-    filename = "iris.csv"
-    
-    # if file is available locally, read it
-    if os.path.isfile(filename):
-        return pd.read_csv(filename, index_col=0)
-    
-    # if file not available locally, acquire data from SQL database
-    # and write it as csv locally for future use
+    '''
+    This function reads in iris data from Codeup database, writes data to
+    a csv file if a local file does not exist, and returns a df.
+    '''
+    if os.path.isfile('iris_df.csv'):
+        
+        # If csv file exists read in data from csv file.
+        df = pd.read_csv('iris_df.csv', index_col=0)
+        
     else:
-        # read the SQL query into a dataframe
+        
+        # Read fresh data from db into a DataFrame
         df = new_iris_data()
         
-        # Write that dataframe to disk for later. Called "caching" the data for later.
-        df.to_csv(filename)
-
-        # Return the dataframe to the calling code
-        return df  
-
-def new_telco_data():
-    query = """
-        SELECT 
-            *
-        FROM
-            telco_churn.customers
-                JOIN
-            telco_churn.internet_service_types USING (internet_service_type_id)
-                JOIN
-            telco_churn.payment_types USING (payment_type_id)
-                JOIN
-            telco_churn.contract_types USING (contract_type_id)
-        ;
-        """
-
-    url = get_db_url('telco_churn',env='./env.py')
-    df = pd.read_sql(query, url)
+        # Cache data
+        df.to_csv('iris_df.csv')
+        
     return df
 
-import os
+def new_telco_data():
+    '''
+    This function reads the iris data from the Codeup db into a df.
+    '''
+    sql_query = """
+                select * from customers
+                join contract_types using (contract_type_id)
+                join internet_service_types using (internet_service_type_id)
+                join payment_types using (payment_type_id)
+                """
+    
+    # Read in DataFrame from Codeup db.
+    df = pd.read_sql(sql_query, get_connection('telco_churn'))
+    
+    return df
 
 def get_telco_data():
-    filename = "telco.csv"
-    
-    # if file is available locally, read it
-    if os.path.isfile(filename):
-        return pd.read_csv(filename, index_col=0)
-    
-    # if file not available locally, acquire data from SQL database
-    # and write it as csv locally for future use
+    '''
+    This function reads in iris data from Codeup database, writes data to
+    a csv file if a local file does not exist, and returns a df.
+    '''
+    if os.path.isfile('telco.csv'):
+        
+        # If csv file exists read in data from csv file.
+        df = pd.read_csv('telco.csv', index_col=0)
+        
     else:
-        # read the SQL query into a dataframe
+        
+        # Read fresh data from db into a DataFrame
         df = new_telco_data()
         
-        # Write that dataframe to disk for later. Called "caching" the data for later.
-        df.to_csv(filename)
-
-        # Return the dataframe to the calling code
-        return df  
+        # Cache data
+        df.to_csv('telco.csv')
+        
+    return df

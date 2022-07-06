@@ -1,5 +1,9 @@
 import pandas as pd
 
+import sklearn as sk
+import sklearn.model_selection as skm
+
+
 # from sklearn.model_selection import train_test_split
 # from sklearn.impute import SimpleImputer
 
@@ -47,3 +51,20 @@ def prep_telco(df):
     dummies = pd.get_dummies(df[['gender', 'internet_service_type', 'payment_type', 'contract_type', 'phone_lines']], drop_first=False)
     df = pd.concat([df, dummies], axis=1)
     return df
+
+def train_validate_test_split(df, seed=123, stratify=None):
+    # First split off our testing data.
+    train_and_validate, test = skm.train_test_split(
+        df, 
+        test_size=0.2, 
+        random_state=seed, 
+        stratify=( df[stratify] if stratify else None)
+    )
+    # Then split the remaining into train/validate data.
+    train, validate = skm.train_test_split(
+        train_and_validate,
+        test_size=0.3,
+        random_state=seed,
+        stratify= (train_and_validate[stratify] if stratify else None)
+    )
+    return train, validate, test
