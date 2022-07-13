@@ -2,6 +2,9 @@ import pandas as pd
 
 import sklearn as sk
 import sklearn.model_selection as skm
+from sklearn.impute import SimpleImputer
+
+import acquire
 
 
 # from sklearn.model_selection import train_test_split
@@ -68,3 +71,17 @@ def train_validate_test_split(df, seed=123, stratify=None):
         stratify= (train_and_validate[stratify] if stratify else None)
     )
     return train, validate, test
+
+def titanic_impute_age(df):
+    titanic = acquire.get_titanic_data()
+    imputer = SimpleImputer(missing_values=np.nan, strategy='mean')
+    df = df.join(titanic.age, how='left')
+    imputer.fit(df[['age']])
+    df['age'] = imputer.transform(df[['age']])
+    df['age'] = round(df.age, 0)
+    return df
+
+def split_x_y(df, target, features):
+    x = df[features]
+    y = df[target]
+    return x, y
